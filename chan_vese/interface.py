@@ -5,7 +5,7 @@ from tkinter import filedialog
 from PIL import  Image, ImageTk
 import chan_vese as chan_vese
 
-IMAGES_DIR = "../images"
+IMAGES_DIR = "images"
 def list_image_names(directory=IMAGES_DIR):
     valid_extensions = ('.png', '.jpg', '.jpeg', '.bmp', '.gif')
     image_names = [f for f in os.listdir(directory) if f.endswith(valid_extensions)]
