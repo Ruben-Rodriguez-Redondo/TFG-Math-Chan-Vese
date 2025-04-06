@@ -5,12 +5,13 @@ from tkinter import filedialog
 from PIL import  Image, ImageTk
 import chan_vese as chan_vese
 
-def list_image_names(directory="images"):
+IMAGES_DIR = "../images"
+def list_image_names(directory=IMAGES_DIR):
     valid_extensions = ('.png', '.jpg', '.jpeg', '.bmp', '.gif')
     image_names = [f for f in os.listdir(directory) if f.endswith(valid_extensions)]
     return image_names
 
-def on_image_click(image_name,label, all_labels, directory="images"):
+def on_image_click(image_name,label, all_labels, directory=IMAGES_DIR):
     image_path = os.path.join(directory, image_name)
     chan_vese.setImagePath(image_path)
 
@@ -160,7 +161,7 @@ root = Tk()
 root.title("Chan-Vese Segmentation")
 root.config(bg="#F5F5F5")
 chan_vese.initializeParams()
-icon = Image.open('images/gris_espiral.png')
+icon = Image.open(f'{IMAGES_DIR}/gris_espiral.png')
 icon = icon.resize((32, 32))  
 root.iconphoto(False, ImageTk.PhotoImage(icon))
 

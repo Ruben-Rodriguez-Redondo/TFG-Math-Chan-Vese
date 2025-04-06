@@ -152,7 +152,7 @@ def initializeParams():
     setReinicialize(0)
     setExpPhase(1)
     setLambdas()
-    setImagePath("images/gris_espiral.png")
+    setImagePath("../images/gris_espiral.png")
 
 def image_to_L_or_RGB_and_resize(image_path):
     global fig, ax
