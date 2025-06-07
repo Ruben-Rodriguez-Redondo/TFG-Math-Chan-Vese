@@ -15,13 +15,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-
+import itertools
+import math
 import time
-from PIL import Image
+
 import matplotlib.pyplot as plt
 import numpy as np
-import math
-import itertools
+from PIL import Image
+
 
 ### Auxiliar functions: setters and getters Chan-Vese method params ###
 def setParams(new_mu, new_nu, new_eta, new_time_step, new_epsilon):
@@ -47,9 +48,11 @@ def setParams(new_mu, new_nu, new_eta, new_time_step, new_epsilon):
     except ValueError:
         pass
 
+
 def getParams():
     global mu, nu_param, eta, time_step, epsilon
     return mu, nu_param, eta, time_step, epsilon
+
 
 def setResize(w, h):
     global widht_resize, height_resize
@@ -66,9 +69,11 @@ def setResize(w, h):
     except ValueError:
         pass
 
+
 def getResize():
     global widht_resize, height_resize
     return widht_resize, height_resize
+
 
 def setMaxIterations(iteration):
     global maxIterations
@@ -77,9 +82,11 @@ def setMaxIterations(iteration):
     except ValueError:
         pass
 
+
 def getMaxIterations():
     global maxIterations
     return maxIterations
+
 
 def setTolerance(tol):
     global tolerance
@@ -88,9 +95,11 @@ def setTolerance(tol):
     except ValueError:
         pass
 
+
 def getTolerance():
     global tolerance
     return tolerance
+
 
 def setExpPhase(exp_phs):
     global exp_phase
@@ -100,9 +109,11 @@ def setExpPhase(exp_phs):
     except:
         pass
 
+
 def getExpPhase():
     global exp_phase
     return exp_phase
+
 
 def setLambdas(dupla=None):
     global lambdas
@@ -114,9 +125,11 @@ def setLambdas(dupla=None):
     except:
         pass
 
+
 def getLambdas():
     global lambdas
     return lambdas
+
 
 def setReinicialize(restart):
     global reinitialize
@@ -125,21 +138,24 @@ def setReinicialize(restart):
     except ValueError:
         pass
 
+
 def getReinicialize():
     global reinitialize
     return reinitialize
+
 
 def setImagePath(path):
     global img_path
     img_path = path
 
-def setInitialFunction(nFunction):
 
+def setInitialFunction(nFunction):
     global init_phi
     if nFunction == 1:
         init_phi = init_phi_circle
     else:
         init_phi = init_phi_chessboard
+
 
 ### Functions focused on real time process actualization ###
 
@@ -152,6 +168,7 @@ def draw_avarage_image(img, c, c_regions):
             img_array[c_region[:, 0], c_region[:, 1]] = c[z]
     ax[1].imshow(img_array, cmap='gray', vmin=0, vmax=255 if img.mode == 'L' else None)
     ax[1].axis('off')
+
 
 def draw_phi_image(img, borders):
     """Draw the original imagen with the segmentation curve (or curves) over it"""
@@ -175,6 +192,7 @@ def draw_phi_image(img, borders):
     ax[2].imshow(img_array)
     ax[2].axis('off')
 
+
 def updateTitles(ax, iteration, c):
     """Updates figure titles over iterations"""
     ax[0].set_title("Original")
@@ -192,8 +210,6 @@ def updateTitles(ax, iteration, c):
     ax[1].set_title(title_str)
 
 
-
-
 ### More complex functions focused on the Chan-Vese model algorithm ###
 
 def init_phi_circle(img, num_phi, total):
@@ -208,7 +224,8 @@ def init_phi_circle(img, num_phi, total):
             phi[i, j] = radius - math.sqrt((j - center_x) ** 2 + (i - center_y) ** 2)
     return phi
 
-def init_phi_chessboard(img, num_phi, any = None):
+
+def init_phi_chessboard(img, num_phi, any=None):
     """Initializes the curve (phi) as a chessboard"""
     width, height = img.size
     x = np.linspace(0, width - 1, width)
@@ -218,6 +235,7 @@ def init_phi_chessboard(img, num_phi, any = None):
     frequency = (np.pi / 5)
     phi = np.sin(frequency * (X - offset)) * np.sin(frequency * (Y - offset))
     return phi
+
 
 def initializeParams():
     """
@@ -234,6 +252,7 @@ def initializeParams():
     setLambdas()
     setImagePath("images/gris_espiral.png")
 
+
 def image_to_L_or_RGB_and_resize(image_path):
     """Transforms the imagen to gray or RGB format and resize it"""
     global fig, ax
@@ -245,7 +264,8 @@ def image_to_L_or_RGB_and_resize(image_path):
     elif img.mode in ["L"]:
         img = img.convert('L')
     else:
-        print(f"El modo de imagen '{img.mode}' no es manejado explícitamente ({img.mode} se tratará de convertir a RGB).")
+        print(
+            f"El modo de imagen '{img.mode}' no es manejado explícitamente ({img.mode} se tratará de convertir a RGB).")
         img = img.convert("RGB")
 
     fig, ax = plt.subplots(1, 3)
@@ -253,6 +273,7 @@ def image_to_L_or_RGB_and_resize(image_path):
     ax[0].axis('off')
 
     return img
+
 
 def compute_c(img, list_phis):
     """Computes all constant values (c_i) given a list of curves (phi's)"""
@@ -300,7 +321,7 @@ def reinitialization(phi):
     dD = np.zeros_like(phi)
     for i in range(rows):
         for j in range(cols):
-            if len(borders) >0 and [i,j] in borders:
+            if len(borders) > 0 and [i, j] in borders:
                 continue
             a = phi[i, j] - (phi[i, j - 1] if j > 0 else 0)
             b = (phi[i, j + 1] if j < cols - 1 else 0) - phi[i, j]
@@ -326,23 +347,27 @@ def reinitialization(phi):
                     max(c_n ** 2, d_p ** 2)) - 1
 
     phi = phi - time_step * sussman_sign(phi) * dD
-    for [i,j] in borders:
+    for [i, j] in borders:
         if len(borders > 0) and [i, j] in borders:
-            phi[i,j] = 0
+            phi[i, j] = 0
     return phi
+
 
 def sussman_sign(phi):
     """Computes smoothed sign function"""
     return phi / np.sqrt(phi ** 2 + 1)
+
 
 def phi_stationary(phi, phi_past):
     """Determinants if the curve archives the convergence/stationary criteria"""
     global tolerance, past
     return True if ((np.linalg.norm(phi - phi_past)) / phi.size) < tolerance else False
 
+
 def euclidean_norm(image_i_j, c):
     """Computes the Euclidean norm"""
     return np.linalg.norm(image_i_j - c)
+
 
 def find_borders(phi):
     """Find the contour of the curve which means its sign changes"""
@@ -350,7 +375,9 @@ def find_borders(phi):
     for i in range(1, phi.shape[0] - 1):
         for j in range(1, phi.shape[1] - 1):
             if (phi[i, j] == 0 or (phi[i, j] > 0 and (
-                    phi[i - 1, j] < 0 or phi[i + 1, j] < 0 or phi[i, j - 1] < 0 or phi[i, j + 1] < 0 or phi[i+1,j+1]<0 or phi[i-1,j-1]<0 or phi[i-1,j+1]<0 or phi[i+1,j-1] <0))): #orphi[i+1,j+1]<0 or phi[i-1,j-1]<0 or phi[i-1,j+1]<0 or phi[i+1,j-1] <0
+                    phi[i - 1, j] < 0 or phi[i + 1, j] < 0 or phi[i, j - 1] < 0 or phi[i, j + 1] < 0 or phi[
+                i + 1, j + 1] < 0 or phi[i - 1, j - 1] < 0 or phi[i - 1, j + 1] < 0 or phi[
+                        i + 1, j - 1] < 0))):  # orphi[i+1,j+1]<0 or phi[i-1,j-1]<0 or phi[i-1,j+1]<0 or phi[i+1,j-1] <0
                 borders.append((i, j))
     return np.array(borders)
 
@@ -360,13 +387,13 @@ def chan_vese_segmentation():
     start = time.time()
 
     img = image_to_L_or_RGB_and_resize(img_path)
-    total_layers = 3 if img.mode =="RGB" else 1
+    total_layers = 3 if img.mode == "RGB" else 1
     width, height = img.size
     img_array = np.array(img).astype(float)
     exp_phase = getExpPhase()
     list_phis = []
     for i in range(exp_phase):
-        phi = init_phi(img,i, exp_phase)
+        phi = init_phi(img, i, exp_phase)
         list_phis.append(phi)
     borders = []
     for i, phi in enumerate(list_phis):
@@ -378,7 +405,6 @@ def chan_vese_segmentation():
     updateTitles(ax, 0, c)
     plt.show(block=False)
     plt.pause(1)
-    
 
     for iteration in range(maxIterations):
         count_stationary = 0
@@ -424,18 +450,16 @@ def chan_vese_segmentation():
                                 else:
                                     sign2 *= 1 - (1 if phi_aux[i, j] >= 0 else 0)
                         magic += -sign * lambdas[comb_idx] * (
-                                    (euclidean_norm(img_array[i, j], c[comb_idx])) ** 2) * sign2
+                                (euclidean_norm(img_array[i, j], c[comb_idx])) ** 2) * sign2
 
-                    second_term = -nu_param * (1 - intersection) + magic *1/total_layers
+                    second_term = -nu_param * (1 - intersection) + magic * 1 / total_layers
 
                     phi[i, j] = (phi[i, j] + time_step * delta * (first_term + second_term)) / denominator
 
-
             if reinitialize > 0 and ((iteration + 1) % reinitialize == 0):
-                for reiniIter in range(0,2):
-                    list_phis[num_phi] =reinitialization(phi)
+                for reiniIter in range(0, 2):
+                    list_phis[num_phi] = reinitialization(phi)
                     phi = list_phis[num_phi]
-
 
             if phi_stationary(phi, phi_past):
                 count_stationary += 1
@@ -470,7 +494,6 @@ def chan_vese_segmentation():
     fig.text(0.5, 0.15, f"{segmen_time:.2f} segundos", ha='center', va='center', fontsize=12, color='red')
 
     plt.show()
-
 
 
 if __name__ == "__main__":
