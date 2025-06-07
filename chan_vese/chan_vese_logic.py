@@ -1,3 +1,21 @@
+# Chan-Vese segmentation
+# Copyright (C) 2025  Rubén Rodríguez Redondo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+
 import time
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -5,6 +23,7 @@ import numpy as np
 import math
 import itertools
 
+### Auxiliar functions: setters and getters Chan-Vese method params ###
 def setParams(new_mu, new_nu, new_eta, new_time_step, new_epsilon):
     global mu, nu_param, eta, time_step, epsilon
     try:
@@ -114,7 +133,71 @@ def setImagePath(path):
     global img_path
     img_path = path
 
+def setInitialFunction(nFunction):
+
+    global init_phi
+    if nFunction == 1:
+        init_phi = init_phi_circle
+    else:
+        init_phi = init_phi_chessboard
+
+### Functions focused on real time process actualization ###
+
+def draw_avarage_image(img, c, c_regions):
+    """Draws the image using only the averages c_i values"""
+    global fig, ax
+    img_array = np.array(img)
+    for z, c_region in enumerate(c_regions):
+        if len(c_region) > 0:
+            img_array[c_region[:, 0], c_region[:, 1]] = c[z]
+    ax[1].imshow(img_array, cmap='gray', vmin=0, vmax=255 if img.mode == 'L' else None)
+    ax[1].axis('off')
+
+def draw_phi_image(img, borders):
+    """Draw the original imagen with the segmentation curve (or curves) over it"""
+    global fig, ax
+    img_array = np.array(img)
+    colors = [
+        (255, 0, 0),
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 255, 0),
+        (255, 165, 0),
+        (128, 0, 128)
+    ]
+    if img.mode == "L":
+        img_array = np.stack((img_array,) * 3, axis=-1)
+
+    if len(borders[0]) > 0:
+        for z, between_idx in enumerate(borders):
+            img_array[between_idx[:, 0], between_idx[:, 1]] = colors[z]
+
+    ax[2].imshow(img_array)
+    ax[2].axis('off')
+
+def updateTitles(ax, iteration, c):
+    """Updates figure titles over iterations"""
+    ax[0].set_title("Original")
+    ax[2].set_title(f"Iteración {iteration}")
+    grouped_strs = []
+    for i in range(0, len(c), 2):
+        group = [
+            f"c{j + 1} = ({c[j][0]:.0f}, {c[j][1]:.0f}, {c[j][2]:.0f})" if isinstance(c[j], (list, np.ndarray)) and len(
+                c[j]) == 3
+            else f"c{j + 1} = {c[j]:.0f}"
+            for j in range(i, min(i + 2, len(c)))
+        ]
+        grouped_strs.append(", ".join(group))
+    title_str = "\n".join(grouped_strs)
+    ax[1].set_title(title_str)
+
+
+
+
+### More complex functions focused on the Chan-Vese model algorithm ###
+
 def init_phi_circle(img, num_phi, total):
+    """Initializes the curve (phi) as a circle"""
     width, height = img.size
     center_x = width // (total + 1) * (num_phi + 1)
     center_y = height // 2
@@ -126,6 +209,7 @@ def init_phi_circle(img, num_phi, total):
     return phi
 
 def init_phi_chessboard(img, num_phi, any = None):
+    """Initializes the curve (phi) as a chessboard"""
     width, height = img.size
     x = np.linspace(0, width - 1, width)
     y = np.linspace(0, height - 1, height)
@@ -135,14 +219,10 @@ def init_phi_chessboard(img, num_phi, any = None):
     phi = np.sin(frequency * (X - offset)) * np.sin(frequency * (Y - offset))
     return phi
 
-def setInitialFunction(nFunction):
-    global init_phi
-    if nFunction == 1:
-        init_phi = init_phi_circle
-    else:
-        init_phi = init_phi_chessboard
-
 def initializeParams():
+    """
+    Initializes all Chan-Vese model  params and hiperparams
+    """
     setResize(100, 100)
     setParams(0.01, 0
               , 0.0001, 0.5, 1)
@@ -155,6 +235,7 @@ def initializeParams():
     setImagePath("images/gris_espiral.png")
 
 def image_to_L_or_RGB_and_resize(image_path):
+    """Transforms the imagen to gray or RGB format and resize it"""
     global fig, ax
     img = Image.open(image_path)
     img = img.resize(getResize())
@@ -174,6 +255,7 @@ def image_to_L_or_RGB_and_resize(image_path):
     return img
 
 def compute_c(img, list_phis):
+    """Computes all constant values (c_i) given a list of curves (phi's)"""
     img_array = np.array(img)
     num_phis = len(list_phis)
     c = np.empty((2 ** num_phis, 3) if img.mode == "RGB" else (2 ** num_phis))
@@ -210,52 +292,9 @@ def compute_c(img, list_phis):
             c[comb_idx] = np.array([0, 0, 0]) if img.mode == "RGB" else 0
     return c, c_regions
 
-def draw_avarage_image(img, c, c_regions):
-    global fig, ax
-    img_array = np.array(img)
-    for z, c_region in enumerate(c_regions):
-        if len(c_region) > 0:
-            img_array[c_region[:, 0], c_region[:, 1]] = c[z]
-    ax[1].imshow(img_array, cmap='gray', vmin=0, vmax=255 if img.mode == 'L' else None)
-    ax[1].axis('off')
-
-def draw_phi_image(img, borders):
-    global fig, ax
-    img_array = np.array(img)
-    colors = [
-        (255, 0, 0),
-        (0, 255, 0),
-        (0, 0, 255),
-        (255, 255, 0),
-        (255, 165, 0),
-        (128, 0, 128)
-    ]
-    if img.mode == "L":
-        img_array = np.stack((img_array,) * 3, axis=-1)
-
-    if len(borders[0]) > 0:
-        for z, between_idx in enumerate(borders):
-            img_array[between_idx[:, 0], between_idx[:, 1]] = colors[z]
-
-    ax[2].imshow(img_array)
-    ax[2].axis('off')
-
-def updateTitles(ax, iteration, c):
-    ax[0].set_title("Original")
-    ax[2].set_title(f"Iteración {iteration}")
-    grouped_strs = []
-    for i in range(0, len(c), 2):
-        group = [
-            f"c{j + 1} = ({c[j][0]:.0f}, {c[j][1]:.0f}, {c[j][2]:.0f})" if isinstance(c[j], (list, np.ndarray)) and len(
-                c[j]) == 3
-            else f"c{j + 1} = {c[j]:.0f}"
-            for j in range(i, min(i + 2, len(c)))
-        ]
-        grouped_strs.append(", ".join(group))
-    title_str = "\n".join(grouped_strs)
-    ax[1].set_title(title_str)
 
 def reinitialization(phi):
+    """Performs the reinitialization"""
     rows, cols = phi.shape
     borders = find_borders(phi)
     dD = np.zeros_like(phi)
@@ -293,16 +332,20 @@ def reinitialization(phi):
     return phi
 
 def sussman_sign(phi):
+    """Computes smoothed sign function"""
     return phi / np.sqrt(phi ** 2 + 1)
 
-def phi_Stationary(phi, phi_past):
+def phi_stationary(phi, phi_past):
+    """Determinants if the curve archives the convergence/stationary criteria"""
     global tolerance, past
     return True if ((np.linalg.norm(phi - phi_past)) / phi.size) < tolerance else False
 
 def euclidean_norm(image_i_j, c):
+    """Computes the Euclidean norm"""
     return np.linalg.norm(image_i_j - c)
 
 def find_borders(phi):
+    """Find the contour of the curve which means its sign changes"""
     borders = []
     for i in range(1, phi.shape[0] - 1):
         for j in range(1, phi.shape[1] - 1):
@@ -313,7 +356,7 @@ def find_borders(phi):
 
 
 def chan_vese_segmentation():
-
+    """Body of the Chan-Vese method which performs the algorithm of the model"""
     start = time.time()
 
     img = image_to_L_or_RGB_and_resize(img_path)
@@ -394,7 +437,7 @@ def chan_vese_segmentation():
                     phi = list_phis[num_phi]
 
 
-            if phi_Stationary(phi, phi_past):
+            if phi_stationary(phi, phi_past):
                 count_stationary += 1
 
             borders[num_phi] = find_borders(phi)

@@ -96,10 +96,10 @@ This one appears once  the green button (Chan-Vese segmentation) is pressed. It 
 ## License 📜
 
 This work is licensed under
-the [Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
+the [GNU General Public License v3.0. License](https://www.gnu.org/licenses/gpl-3.0.en.html).
 You are free to copy, modify, distribute, and reproduce the material in any medium, provided that you give appropriate
 credit, indicate if changes were made, and distribute your contributions under the same license.
 
 <div align="center">
-  <img src="/figs/license.png" alt="License">
+  <img src="/figs/license.png" alt="License" width="80%">
 </div>
