@@ -10,7 +10,7 @@ setup(
     name="Chan-Vese",
     version="1.0.0",
     packages=find_packages(),
-    author_email="r.rodriguezr.2020@alumnos.urjc.es",
+    author="Rubén Rodríguez Redondo",
     description="Chan-Vese segmentation providing an interface including multiphase and multichannel extensions",
     url="https://github.com/Ruben-Rodriguez-Redondo/TFG-Math-Chan-Vese",
     classifiers=[
